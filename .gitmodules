@@ -1,3 +1,4 @@
 [submodule "firmware/lvgl_micropython"]
 	path = firmware/lvgl_micropython
 	url = https://github.com/lvgl-micropython/lvgl_micropython.git
+	ignore = dirty
