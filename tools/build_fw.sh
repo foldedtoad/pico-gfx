@@ -26,6 +26,9 @@ fi
 
 # 3. Build.
 export EEZUI_MODULE="$MODULE"
+# The binding's "make submodules" step (first build in a fresh clone) runs
+# CMake without GEN_SCRIPT set, which fails looking for gen/_api_gen_mpy.py.
+export GEN_SCRIPT=python
 cd "$BIND"
 python3 make.py rp2 BOARD=RPI_PICO2 DISPLAY=gc9a01 "$@" 2>&1 | tee "$ROOT/build.log"
 
