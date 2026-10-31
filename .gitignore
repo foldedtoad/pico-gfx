@@ -1,0 +1,4 @@
+build.log
+__pycache__/
+*.pyc
+firmware/pico-gfx.uf2
