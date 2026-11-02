@@ -5,11 +5,13 @@
 //   eezui.set_var(name, value)        write an EEZ native variable
 //   eezui.get_var(name)               read it back
 //   eezui.load_screen(id)             switch screen (eezui.SCREEN_MAIN, ...)
-//   eezui.on_action(callback)         callback(name) for EEZ actions (none defined yet)
+//   eezui.on_action(callback)         callback(name) for EEZ actions, e.g. 'on_press'
 //
 // When you add a native variable in EEZ: add its storage + get/set below,
-// and a line in eezui_set_var / eezui_get_var. The link step fails with
-// "undefined reference to get_var_xxx" until you do - that is your checklist.
+// and a line in eezui_set_var / eezui_get_var. When you add an action: add an
+// action_xxx() stub that calls eezui_dispatch(). The link step fails with
+// "undefined reference to get_var_xxx / action_xxx" until you do - that is
+// your checklist.
 
 #include <string.h>
 #include "py/runtime.h"
@@ -49,6 +51,13 @@ void eezui_dispatch(mp_obj_t name) {
     if (cb != MP_OBJ_NULL && cb != mp_const_none) {
         mp_sched_schedule(cb, name);
     }
+}
+
+// EEZ action stubs: one per action defined in EEZ Studio (see actions.h).
+// The qstr name is what your Python callback receives.
+void action_on_press(lv_event_t *e) {
+    (void)e;
+    eezui_dispatch(MP_OBJ_NEW_QSTR(MP_QSTR_on_press));
 }
 
 // ---------------------------------------------------------------------------

@@ -2,10 +2,12 @@
 #
 #   import hw
 #   display = hw.start()        # guard + SPI + display + LVGL task handler
+#   hw.add_button(22)           # optional: GP22 button -> LVGL ENTER key
 #   ...
 #   hw.stop()                   # call from finally: - hard-resets by default
 #
 # Pins: SPI0, SCK GP6, MOSI GP7, RST GP10, DC GP11, CS GP12, BL GP13
+#       button GP22 -> GND (internal pull-up)
 
 import sys
 import time
@@ -27,6 +29,7 @@ _MAGIC = 0x4C56474C             # "LVGL"
 
 display = None
 task_handler = None
+_keep = []                      # references LVGL callbacks need kept alive
 
 
 def _guard():
@@ -80,6 +83,39 @@ def start(backlight=100):
 
     task_handler = th_mod.TaskHandler()
     return display
+
+
+def add_button(pin=22, key=None):
+    """Map an active-low push button (pin -> GND) to an LVGL keypad key.
+
+    Call AFTER start() and BEFORE eezui.init(): it creates a default group, so
+    every focusable widget EEZ creates (buttons, sliders...) joins it, and the
+    button presses ENTER on whichever widget has focus.
+    Returns the LVGL group.
+    """
+    import lvgl as lv
+    if key is None:
+        key = lv.KEY.ENTER
+
+    pin_obj = machine.Pin(pin, machine.Pin.IN, machine.Pin.PULL_UP)   # E9-safe
+
+    group = lv.group_create()
+    group.set_default()
+
+    def read_cb(indev, data):
+        data.key = key
+        if pin_obj.value() == 0:
+            data.state = lv.INDEV_STATE.PRESSED
+        else:
+            data.state = lv.INDEV_STATE.RELEASED
+
+    indev = lv.indev_create()
+    indev.set_type(lv.INDEV_TYPE.KEYPAD)
+    indev.set_read_cb(read_cb)
+    indev.set_group(group)
+
+    _keep.extend((pin_obj, group, read_cb, indev))
+    return group
 
 
 def stop(hard_reset=True):

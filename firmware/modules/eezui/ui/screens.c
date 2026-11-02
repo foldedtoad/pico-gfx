@@ -33,9 +33,27 @@ void create_screen_main() {
             // lbl_status
             lv_obj_t *obj = lv_label_create(parent_obj);
             objects.lbl_status = obj;
-            lv_obj_set_pos(obj, 20, 108);
-            lv_obj_set_size(obj, 200, 24);
+            lv_obj_set_pos(obj, 20, 80);
+            lv_obj_set_size(obj, 200, 36);
             lv_label_set_text(obj, "");
+        }
+        {
+            // btn_press
+            lv_obj_t *obj = lv_button_create(parent_obj);
+            objects.btn_press = obj;
+            lv_obj_set_pos(obj, 70, 130);
+            lv_obj_set_size(obj, 100, 44);
+            lv_obj_add_event_cb(obj, action_on_press, LV_EVENT_CLICKED, (void *)0);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    lv_obj_set_pos(obj, 0, 0);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text_static(obj, "Press");
+                }
+            }
         }
     }
     
