@@ -3,7 +3,7 @@
 
 ## Overview
 Assumptions 
-* Developing on Ubuntu V26.04 (V24.04 may be ok, but untesteda)
+* Developing on Ubuntu V26.04 (V24.04 may be ok, but untested)
 * EEZ-Studio installed: example ~/bin/eez-studio/squashfs-root
 
 ## Installing Pico-GFX
