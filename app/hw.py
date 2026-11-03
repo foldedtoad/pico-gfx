@@ -2,12 +2,12 @@
 #
 #   import hw
 #   display = hw.start()        # guard + SPI + display + LVGL task handler
-#   hw.add_button(22)           # optional: GP22 button -> LVGL ENTER key
+#   hw.add_buttons({28: "PREV", 22: "ENTER", 18: "NEXT"})   # optional buttons
 #   ...
 #   hw.stop()                   # call from finally: - hard-resets by default
 #
 # Pins: SPI0, SCK GP6, MOSI GP7, RST GP10, DC GP11, CS GP12, BL GP13
-#       button GP22 -> GND (internal pull-up)
+#       buttons GP28 (prev), GP22 (enter), GP18 (next) -> GND, internal pull-ups
 
 import sys
 import time
@@ -85,37 +85,53 @@ def start(backlight=100):
     return display
 
 
-def add_button(pin=22, key=None):
-    """Map an active-low push button (pin -> GND) to an LVGL keypad key.
+def add_buttons(mapping):
+    """Map active-low push buttons (GPIO -> GND) to LVGL keypad keys.
 
-    Call AFTER start() and BEFORE eezui.init(): it creates a default group, so
-    every focusable widget EEZ creates (buttons, sliders...) joins it, and the
-    button presses ENTER on whichever widget has focus.
+        hw.add_buttons({28: "PREV", 22: "ENTER", 18: "NEXT"})
+
+    Keys are lv.KEY names: PREV/NEXT move focus, ENTER clicks the focused
+    widget, LEFT/RIGHT/UP/DOWN adjust sliders, arcs, rollers...
+    Call AFTER start() and BEFORE eezui.init(): it creates a default group,
+    so every focusable widget EEZ creates joins it (in creation order).
     Returns the LVGL group.
     """
     import lvgl as lv
-    if key is None:
-        key = lv.KEY.ENTER
 
-    pin_obj = machine.Pin(pin, machine.Pin.IN, machine.Pin.PULL_UP)   # E9-safe
+    pins = []
+    for gpio, key in mapping.items():
+        if isinstance(key, str):
+            key = getattr(lv.KEY, key)
+        pins.append((machine.Pin(gpio, machine.Pin.IN, machine.Pin.PULL_UP), key))
 
     group = lv.group_create()
     group.set_default()
 
+    last_key = [pins[0][1]]
+
     def read_cb(indev, data):
-        data.key = key
-        if pin_obj.value() == 0:
-            data.state = lv.INDEV_STATE.PRESSED
-        else:
-            data.state = lv.INDEV_STATE.RELEASED
+        # A keypad reports one key at a time: the first pressed button wins.
+        for pin_obj, key in pins:
+            if pin_obj.value() == 0:
+                last_key[0] = key
+                data.key = key
+                data.state = lv.INDEV_STATE.PRESSED
+                return
+        data.key = last_key[0]          # release must report the same key
+        data.state = lv.INDEV_STATE.RELEASED
 
     indev = lv.indev_create()
     indev.set_type(lv.INDEV_TYPE.KEYPAD)
     indev.set_read_cb(read_cb)
     indev.set_group(group)
 
-    _keep.extend((pin_obj, group, read_cb, indev))
+    _keep.extend((pins, group, read_cb, indev))
     return group
+
+
+def add_button(pin=22, key="ENTER"):
+    """Single button shortcut (kept for button_test.py)."""
+    return add_buttons({pin: key})
 
 
 def stop(hard_reset=True):

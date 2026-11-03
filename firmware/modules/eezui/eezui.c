@@ -60,6 +60,16 @@ void action_on_press(lv_event_t *e) {
     eezui_dispatch(MP_OBJ_NEW_QSTR(MP_QSTR_on_press));
 }
 
+void action_on_minus(lv_event_t *e) {
+    (void)e;
+    eezui_dispatch(MP_OBJ_NEW_QSTR(MP_QSTR_on_minus));
+}
+
+void action_on_plus(lv_event_t *e) {
+    (void)e;
+    eezui_dispatch(MP_OBJ_NEW_QSTR(MP_QSTR_on_plus));
+}
+
 // ---------------------------------------------------------------------------
 // ui_tick() driven by an LVGL timer, so Python never has to call it
 // ---------------------------------------------------------------------------
