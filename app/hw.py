@@ -24,8 +24,10 @@ BUF_LINES = 60
 
 # Watchdog scratch0 survives soft reboots: used to detect stale LVGL state.
 _WDT_BASE = 0x400D8000 if "RP2350" in sys.implementation._machine else 0x40058000
-_SCRATCH0 = _WDT_BASE + 0x0C
+_SCRATCH0 = _WDT_BASE + 0x0C   # "LVGL started since last hard reset"
+_SCRATCH1 = _WDT_BASE + 0x10   # "skip autostart once" (survives machine.reset)
 _MAGIC = 0x4C56474C             # "LVGL"
+_SKIP = 0x534B4950              # "SKIP"
 
 display = None
 task_handler = None
@@ -41,6 +43,15 @@ def _guard():
         time.sleep_ms(200)
         machine.reset()
     machine.mem32[_SCRATCH0] = _MAGIC
+
+
+def skip_autostart_requested():
+    """True (once) if the previous run asked main.py not to auto-start.
+    Cleared by reading it, and by any power cycle."""
+    if machine.mem32[_SCRATCH1] == _SKIP:
+        machine.mem32[_SCRATCH1] = 0
+        return True
+    return False
 
 
 def start(backlight=100):
@@ -134,9 +145,12 @@ def add_button(pin=22, key="ENTER"):
     return add_buttons({pin: key})
 
 
-def stop(hard_reset=True):
+def stop(hard_reset=True, skip_autostart=True):
     """Stop drawing, blank the backlight, then hard-reset (LVGL cannot be
-    restarted after a soft reboot on this firmware)."""
+    restarted after a soft reboot on this firmware).
+
+    skip_autostart=True: the next boot stays at the REPL instead of running
+    main.py again, so Ctrl-C / mpremote / a crash never cause a reset loop."""
     for name, fn in (
         ("stop task handler", lambda: task_handler.deinit()),
         ("drain scheduled",   lambda: time.sleep_ms(100)),
@@ -148,6 +162,7 @@ def stop(hard_reset=True):
             print("  stop:", name, "failed:", e)
     if hard_reset:
         machine.mem32[_SCRATCH0] = 0
+        machine.mem32[_SCRATCH1] = _SKIP if skip_autostart else 0
         print("Hard reset - USB reconnects in ~2 s.")
         time.sleep_ms(200)
         machine.reset()
