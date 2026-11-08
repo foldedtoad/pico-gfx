@@ -11,6 +11,10 @@
     "styles.h",
     "ui.c",
     "ui.h",
+    "ui_image_dial_face.c",
+    "ui_image_hand_hour.c",
+    "ui_image_hand_minute.c",
+    "ui_image_hand_second.c",
     "vars.h"
   ]
 }

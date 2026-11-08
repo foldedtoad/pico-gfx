@@ -4,7 +4,9 @@
 //   eezui.init()                      create EEZ screens, load main, start ui_tick timer
 //   eezui.set_var(name, value)        write an EEZ native variable
 //   eezui.get_var(name)               read it back
-//   eezui.load_screen(id)             switch screen (eezui.SCREEN_MAIN, ...)
+//   eezui.load_screen(id)             switch screen (eezui.SCREEN_MAIN, SCREEN_WATCH)
+//   eezui.set_rotation(name, tenths)  rotate an image widget (0.1 degree units)
+//   eezui.set_pivot(name, x, y)       set an image widget's rotation pivot
 //   eezui.on_action(callback)         callback(name) for EEZ actions, e.g. 'on_press'
 //
 // When you add a native variable in EEZ: add its storage + get/set below,
@@ -145,6 +147,43 @@ static mp_obj_t eezui_on_action(mp_obj_t cb) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(eezui_on_action_obj, eezui_on_action);
 
+// ---------------------------------------------------------------------------
+// Widgets Python may address by name. Add a line per EEZ widget you need;
+// the names are the "Name" property in EEZ (fields of the objects struct).
+// ---------------------------------------------------------------------------
+
+static lv_obj_t *widget_by_name(const char *name) {
+    if (strcmp(name, "img_hour") == 0)   return objects.img_hour;
+    if (strcmp(name, "img_minute") == 0) return objects.img_minute;
+    if (strcmp(name, "img_second") == 0) return objects.img_second;
+    if (strcmp(name, "lbl_status") == 0) return objects.lbl_status;
+    return NULL;
+}
+
+static lv_obj_t *widget_arg(mp_obj_t name_in) {
+    const char *name = mp_obj_str_get_str(name_in);
+    lv_obj_t *obj = widget_by_name(name);
+    if (obj == NULL) {
+        mp_raise_msg_varg(&mp_type_ValueError,
+            MP_ERROR_TEXT("unknown widget '%s' (or eezui.init() not called)"), name);
+    }
+    return obj;
+}
+
+static mp_obj_t eezui_set_rotation(mp_obj_t name_in, mp_obj_t tenths_in) {
+    lv_obj_t *obj = widget_arg(name_in);
+    lv_image_set_rotation(obj, (int32_t)mp_obj_get_int(tenths_in));
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_2(eezui_set_rotation_obj, eezui_set_rotation);
+
+static mp_obj_t eezui_set_pivot(mp_obj_t name_in, mp_obj_t x_in, mp_obj_t y_in) {
+    lv_obj_t *obj = widget_arg(name_in);
+    lv_image_set_pivot(obj, (int32_t)mp_obj_get_int(x_in), (int32_t)mp_obj_get_int(y_in));
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_3(eezui_set_pivot_obj, eezui_set_pivot);
+
 static const mp_rom_map_elem_t eezui_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__),    MP_ROM_QSTR(MP_QSTR_eezui) },
     { MP_ROM_QSTR(MP_QSTR_init),        MP_ROM_PTR(&eezui_init_obj) },
@@ -152,7 +191,10 @@ static const mp_rom_map_elem_t eezui_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_get_var),     MP_ROM_PTR(&eezui_get_var_obj) },
     { MP_ROM_QSTR(MP_QSTR_load_screen), MP_ROM_PTR(&eezui_load_screen_obj) },
     { MP_ROM_QSTR(MP_QSTR_on_action),   MP_ROM_PTR(&eezui_on_action_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_rotation), MP_ROM_PTR(&eezui_set_rotation_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_pivot),   MP_ROM_PTR(&eezui_set_pivot_obj) },
     { MP_ROM_QSTR(MP_QSTR_SCREEN_MAIN), MP_ROM_INT(SCREEN_ID_MAIN) },
+    { MP_ROM_QSTR(MP_QSTR_SCREEN_WATCH), MP_ROM_INT(SCREEN_ID_WATCH) },
 };
 static MP_DEFINE_CONST_DICT(eezui_globals, eezui_globals_table);
 

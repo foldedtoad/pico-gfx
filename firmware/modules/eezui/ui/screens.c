@@ -108,12 +108,60 @@ void tick_screen_main() {
     }
 }
 
+void create_screen_watch() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.watch = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 240, 240);
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            // img_dial
+            lv_obj_t *obj = lv_image_create(parent_obj);
+            objects.img_dial = obj;
+            lv_obj_set_pos(obj, 0, 0);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_image_set_src(obj, &img_dial_face);
+        }
+        {
+            // img_second
+            lv_obj_t *obj = lv_image_create(parent_obj);
+            objects.img_second = obj;
+            lv_obj_set_pos(obj, 114, 140);
+            lv_obj_set_size(obj, 12, 37);
+            lv_image_set_src(obj, &img_hand_second);
+        }
+        {
+            // img_hour
+            lv_obj_t *obj = lv_image_create(parent_obj);
+            objects.img_hour = obj;
+            lv_obj_set_pos(obj, 110, 62);
+            lv_obj_set_size(obj, 20, 71);
+            lv_image_set_src(obj, &img_hand_hour);
+        }
+        {
+            // img_minute
+            lv_obj_t *obj = lv_image_create(parent_obj);
+            objects.img_minute = obj;
+            lv_obj_set_pos(obj, 111, 18);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_image_set_src(obj, &img_hand_minute);
+        }
+    }
+    
+    tick_screen_watch();
+}
+
+void tick_screen_watch() {
+}
+
 typedef void (*tick_screen_func_t)();
 tick_screen_func_t tick_screen_funcs[] = {
     tick_screen_main,
+    tick_screen_watch,
 };
 void tick_screen(int screen_index) {
-    if (screen_index >= 0 && screen_index < 1) {
+    if (screen_index >= 0 && screen_index < 2) {
         tick_screen_funcs[screen_index]();
     }
 }
@@ -211,4 +259,5 @@ void create_screens() {
     // Initialize screens
     // Create screens
     create_screen_main();
+    create_screen_watch();
 }

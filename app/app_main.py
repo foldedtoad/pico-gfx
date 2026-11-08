@@ -45,10 +45,12 @@ def run():
 
     from ui import App
     from screens.counter import CounterScreen
+    from screens.watch import WatchScreen
 
     app = App()
-    app.add("main", CounterScreen)
-    app.start("main")
+    app.add("watch", WatchScreen)
+    app.add("counter", CounterScreen)        # kept for testing; not reachable yet
+    app.start("watch")
 
     gc.collect()
     print("app running - free heap:", gc.mem_free())
