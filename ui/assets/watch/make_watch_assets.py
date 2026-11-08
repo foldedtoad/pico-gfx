@@ -79,8 +79,8 @@ def make_dial():
     d.ellipse([C - r, C - r, C + r, C + r], outline=(190, 180, 168), width=iw(0.5))
 
     # upright Arabic hour numerals (6 hidden by the seconds dial)
-    num_f = bodoni(25, weight=800, opsz=40)
-    num12 = bodoni(27, weight=800, opsz=40)
+    num_f = bodoni(25, weight=900, opsz=12)    # low opsz = sturdier hairlines
+    num12 = bodoni(27, weight=900, opsz=12)
     for h in range(1, 13):
         if h == 6:
             continue
@@ -168,7 +168,7 @@ def dither565(im):
 # Colour correction for the panel. Cheap GC9A01 IPS modules have a cool (bluish)
 # white point, so near-white enamel looks blue. Scale R, G, B before dithering
 # to warm it back up. (1, 1, 1) = no correction.
-PANEL_TINT = (1.00, 0.96, 0.86)
+PANEL_TINT = (1.00, 0.93, 0.78)
 
 def tint(im, k):
     r, g, b = im.split()
