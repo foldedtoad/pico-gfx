@@ -2,13 +2,13 @@
 #
 # Stays at the REPL instead of starting the app when:
 #   * the previous run was stopped (Ctrl-C, mpremote, crash) - one boot only
-#   * the middle button (GP22) is held during power-up / reset
+#   * the encoder knob is held pressed (SW, GP28) during power-up / reset
 # A power cycle always starts the app again.
 
 import machine
 import hw
 
-SAFE_BOOT_PIN = 22
+SAFE_BOOT_PIN = 28          # KY-040 SW: low while the knob is pressed
 
 
 def _autostart_allowed():
@@ -17,7 +17,7 @@ def _autostart_allowed():
         print("         machine.reset() or power-cycle to start it again.")
         return False
     if machine.Pin(SAFE_BOOT_PIN, machine.Pin.IN, machine.Pin.PULL_UP).value() == 0:
-        print("main.py: middle button held - safe boot, staying at REPL.")
+        print("main.py: encoder button held - safe boot, staying at REPL.")
         return False
     return True
 

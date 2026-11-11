@@ -24,10 +24,23 @@ import sys
 import time
 
 try:
+    import termios                      # POSIX: a vanished port raises termios.error
+    _PORT_GONE = (OSError, termios.error)
+except ImportError:                     # Windows
+    _PORT_GONE = (OSError,)
+
+try:
     import serial
     import serial.tools.list_ports
 except ImportError:
     sys.exit("pyserial is required:  pip install pyserial   (or apt install python3-serial)")
+
+# Every way a port can fail while the board resets or is unplugged
+PORT_ERRORS = (serial.SerialException,) + _PORT_GONE
+
+
+class DeployError(Exception):
+    pass
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, "app")
@@ -55,11 +68,11 @@ def open_port(port, wait_s=10):
         if dev:
             try:
                 return serial.Serial(dev, 115200, timeout=0.2)
-            except (serial.SerialException, OSError):
+            except PORT_ERRORS:
                 pass
         if time.time() > deadline:
-            sys.exit("No Pico found%s. Is it plugged in, and is Thonny disconnected?"
-                     % (" on " + port if port else ""))
+            raise DeployError("No Pico found%s. Is it plugged in, and is Thonny disconnected?"
+                              % (" on " + port if port else ""))
         time.sleep(0.3)
 
 
@@ -84,8 +97,10 @@ class Board:
         """Stop whatever is running and enter the raw REPL.
 
         If the pico-gfx app is running, Ctrl-C makes it hard-reset the board
-        (it comes back at the REPL), so the port may vanish: reconnect."""
-        for attempt in range(3):
+        (by design: LVGL cannot restart after a soft reboot). The USB port
+        then disappears for ~1-2 s and the board comes back at the REPL, so
+        losing the port here is expected: wait and reconnect."""
+        for attempt in range(4):
             self.ser = open_port(self.port)
             try:
                 self.ser.write(b"\r\x03\x03")          # interrupt anything running
@@ -93,15 +108,23 @@ class Board:
                 self.ser.reset_input_buffer()
                 self.ser.write(b"\r\x01")              # Ctrl-A: raw REPL
                 read_until(self.ser, b"raw REPL; CTRL-B to exit\r\n>", timeout=3)
+                if attempt:
+                    print("  reconnected.")
                 return
-            except (serial.SerialException, OSError, TimeoutError):
-                print("  board is resetting, reconnecting...")
+            except PORT_ERRORS + (TimeoutError,):
+                if attempt == 0:
+                    print("  app stopped - board is resetting, waiting for it to come back...")
+                else:
+                    print("  still waiting (attempt %d)..." % (attempt + 1))
                 try:
                     self.ser.close()
                 except Exception:
                     pass
                 time.sleep(2.5)
-        sys.exit("Could not enter the raw REPL.")
+        raise DeployError(
+            "The board did not come back to the REPL.\n"
+            "  Try a safe boot: hold the encoder knob pressed, press reset (or\n"
+            "  unplug/replug USB), release the knob, then run deploy.py again.")
 
     def exec(self, code, timeout=10):
         """Run code in the raw REPL; return stdout, raise on a device error."""
@@ -134,7 +157,7 @@ class Board:
         try:
             self.ser.write(b"import machine\nmachine.reset()\x04")
             time.sleep(0.5)
-        except (serial.SerialException, OSError):
+        except PORT_ERRORS:
             pass                                       # port vanishes on reset: expected
 
     def close(self):
@@ -160,7 +183,7 @@ def main():
               for p in sorted(glob.glob(os.path.join(APP, "screens", "*.py")))]
     missing = [l for l, _ in files if not os.path.exists(l)]
     if missing:
-        sys.exit("Missing files: " + ", ".join(missing))
+        raise DeployError("Missing files: " + ", ".join(missing))
 
     print("Connecting (stops the app if it is running)...")
     board = Board(args.port)
@@ -182,4 +205,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except DeployError as e:
+        sys.exit("deploy.py: " + str(e))
+    except PORT_ERRORS as e:
+        sys.exit("deploy.py: lost the connection to the board (%s).\n"
+                 "  Was it unplugged or reset mid-copy? Run deploy.py again." % e)
+    except KeyboardInterrupt:
+        sys.exit("deploy.py: cancelled.")

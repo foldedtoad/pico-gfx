@@ -13,13 +13,10 @@ extern "C" {
 // Flow global variables
 
 enum FlowGlobalVariables {
-    FLOW_GLOBAL_VARIABLE_STATUS_TEXT = 0
+    FLOW_GLOBAL_VARIABLE_NONE
 };
 
 // Native global variables
-
-extern const char *get_var_status_text();
-extern void set_var_status_text(const char *value);
 
 #ifdef __cplusplus
 }

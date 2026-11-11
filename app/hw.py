@@ -2,12 +2,12 @@
 #
 #   import hw
 #   display = hw.start()        # guard + SPI + display + LVGL task handler
-#   hw.add_buttons({28: "PREV", 22: "ENTER", 18: "NEXT"})   # optional buttons
+#   hw.backlight(100)           # once the first frame is drawn
 #   ...
 #   hw.stop()                   # call from finally: - hard-resets by default
 #
 # Pins: SPI0, SCK GP6, MOSI GP7, RST GP10, DC GP11, CS GP12, BL GP13
-#       buttons GP28 (prev), GP22 (enter), GP18 (next) -> GND, internal pull-ups
+#       KY-040 encoder: CLK GP18, DT GP22, SW GP28 (module powered from 3V3)
 
 import sys
 import time
@@ -31,7 +31,6 @@ _SKIP = 0x534B4950              # "SKIP"
 
 display = None
 task_handler = None
-_keep = []                      # references LVGL callbacks need kept alive
 
 
 def _guard():
@@ -96,53 +95,10 @@ def start(backlight=100):
     return display
 
 
-def add_buttons(mapping):
-    """Map active-low push buttons (GPIO -> GND) to LVGL keypad keys.
-
-        hw.add_buttons({28: "PREV", 22: "ENTER", 18: "NEXT"})
-
-    Keys are lv.KEY names: PREV/NEXT move focus, ENTER clicks the focused
-    widget, LEFT/RIGHT/UP/DOWN adjust sliders, arcs, rollers...
-    Call AFTER start() and BEFORE eezui.init(): it creates a default group,
-    so every focusable widget EEZ creates joins it (in creation order).
-    Returns the LVGL group.
-    """
-    import lvgl as lv
-
-    pins = []
-    for gpio, key in mapping.items():
-        if isinstance(key, str):
-            key = getattr(lv.KEY, key)
-        pins.append((machine.Pin(gpio, machine.Pin.IN, machine.Pin.PULL_UP), key))
-
-    group = lv.group_create()
-    group.set_default()
-
-    last_key = [pins[0][1]]
-
-    def read_cb(indev, data):
-        # A keypad reports one key at a time: the first pressed button wins.
-        for pin_obj, key in pins:
-            if pin_obj.value() == 0:
-                last_key[0] = key
-                data.key = key
-                data.state = lv.INDEV_STATE.PRESSED
-                return
-        data.key = last_key[0]          # release must report the same key
-        data.state = lv.INDEV_STATE.RELEASED
-
-    indev = lv.indev_create()
-    indev.set_type(lv.INDEV_TYPE.KEYPAD)
-    indev.set_read_cb(read_cb)
-    indev.set_group(group)
-
-    _keep.extend((pins, group, read_cb, indev))
-    return group
-
-
-def add_button(pin=22, key="ENTER"):
-    """Single button shortcut (kept for button_test.py)."""
-    return add_buttons({pin: key})
+def backlight(level):
+    """Backlight 0-100. start(backlight=0) + backlight(100) after the first
+    frame is drawn avoids showing a half-initialised screen at power-up."""
+    display.set_backlight(level)
 
 
 def stop(hard_reset=True, skip_autostart=True):

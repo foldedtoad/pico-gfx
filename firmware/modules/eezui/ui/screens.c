@@ -22,92 +22,6 @@ lv_obj_t *tick_value_change_obj;
 // Screens
 //
 
-void create_screen_main() {
-    lv_obj_t *obj = lv_obj_create(0);
-    objects.main = obj;
-    lv_obj_set_pos(obj, 0, 0);
-    lv_obj_set_size(obj, 240, 240);
-    {
-        lv_obj_t *parent_obj = obj;
-        {
-            // lbl_status
-            lv_obj_t *obj = lv_label_create(parent_obj);
-            objects.lbl_status = obj;
-            lv_obj_set_pos(obj, 20, 80);
-            lv_obj_set_size(obj, 200, 36);
-            lv_label_set_text(obj, "");
-        }
-        {
-            lv_obj_t *obj = lv_button_create(parent_obj);
-            lv_obj_set_pos(obj, 22, 130);
-            lv_obj_set_size(obj, 60, 44);
-            {
-                lv_obj_t *parent_obj = obj;
-                {
-                    // btn_minus
-                    lv_obj_t *obj = lv_label_create(parent_obj);
-                    objects.btn_minus = obj;
-                    lv_obj_set_pos(obj, 0, 0);
-                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                    lv_obj_add_event_cb(obj, action_on_minus, LV_EVENT_CLICKED, (void *)0);
-                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_label_set_text_static(obj, "-");
-                }
-            }
-        }
-        {
-            // btn_press
-            lv_obj_t *obj = lv_button_create(parent_obj);
-            objects.btn_press = obj;
-            lv_obj_set_pos(obj, 90, 130);
-            lv_obj_set_size(obj, 60, 44);
-            lv_obj_add_event_cb(obj, action_on_press, LV_EVENT_CLICKED, (void *)0);
-            {
-                lv_obj_t *parent_obj = obj;
-                {
-                    lv_obj_t *obj = lv_label_create(parent_obj);
-                    lv_obj_set_pos(obj, 0, 0);
-                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_label_set_text_static(obj, "Press");
-                }
-            }
-        }
-        {
-            // btn_plus
-            lv_obj_t *obj = lv_button_create(parent_obj);
-            objects.btn_plus = obj;
-            lv_obj_set_pos(obj, 158, 130);
-            lv_obj_set_size(obj, 60, 44);
-            lv_obj_add_event_cb(obj, action_on_plus, LV_EVENT_CLICKED, (void *)0);
-            {
-                lv_obj_t *parent_obj = obj;
-                {
-                    lv_obj_t *obj = lv_label_create(parent_obj);
-                    lv_obj_set_pos(obj, 0, 0);
-                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_label_set_text_static(obj, "+");
-                }
-            }
-        }
-    }
-    
-    tick_screen_main();
-}
-
-void tick_screen_main() {
-    {
-        const char *new_val = get_var_status_text();
-        const char *cur_val = lv_label_get_text(objects.lbl_status);
-        if (strcmp(new_val, cur_val) != 0) {
-            tick_value_change_obj = objects.lbl_status;
-            lv_label_set_text(objects.lbl_status, new_val);
-            tick_value_change_obj = NULL;
-        }
-    }
-}
-
 void create_screen_watch() {
     lv_obj_t *obj = lv_obj_create(0);
     objects.watch = obj;
@@ -157,11 +71,10 @@ void tick_screen_watch() {
 
 typedef void (*tick_screen_func_t)();
 tick_screen_func_t tick_screen_funcs[] = {
-    tick_screen_main,
     tick_screen_watch,
 };
 void tick_screen(int screen_index) {
-    if (screen_index >= 0 && screen_index < 2) {
+    if (screen_index >= 0 && screen_index < 1) {
         tick_screen_funcs[screen_index]();
     }
 }
@@ -258,6 +171,5 @@ void create_screens() {
     
     // Initialize screens
     // Create screens
-    create_screen_main();
     create_screen_watch();
 }

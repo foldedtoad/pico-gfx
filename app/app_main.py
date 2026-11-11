@@ -11,7 +11,6 @@ import time
 import asyncio
 import hw
 
-BUTTONS = {28: "PREV", 22: "ENTER", 18: "NEXT"}   # left, middle, right
 DEBUG_STATS_S = 10                                 # 0 = no periodic stats
 
 
@@ -40,17 +39,18 @@ def _log_crash(exc):
 
 
 def run():
-    hw.start()
-    hw.add_buttons(BUTTONS)                        # before the UI is created
+    hw.start(backlight=0)                          # dark until the dial is drawn
 
     from ui import App
-    from screens.counter import CounterScreen
     from screens.watch import WatchScreen
+    import lvgl as lv
 
     app = App()
     app.add("watch", WatchScreen)
-    app.add("counter", CounterScreen)        # kept for testing; not reachable yet
     app.start("watch")
+
+    lv.refr_now(None)                              # draw the first frame now...
+    hw.backlight(100)                              # ...then light it up
 
     gc.collect()
     print("app running - free heap:", gc.mem_free())
