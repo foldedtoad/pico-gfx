@@ -6,7 +6,8 @@ Assumptions
 * Developing on Ubuntu V26.04 (V24.04 may be ok, but untested)
 * EEZ-Studio installed: example ~/bin/eez-studio/squashfs-root
 * Raspberry Pie RP2350 (Pico2)
-*  Round TFT Display 240x240  LCD Display SPI DC3.3V  
+*  Round TFT Display 240x240  LCD Display SPI DC3.3V
+*  KY-040 Rotory-encoder with push-button switch
 
 ## Installing Pico-GFX
 ```
@@ -19,4 +20,5 @@ git submodule update --init lib/micropython     # moves MicroPython to 8dc05cd
 cd ~/micropython_projects/pico-gfx
 
 tools/build_fw.sh
+tools/deploy.py
 ```
