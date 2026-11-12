@@ -22,3 +22,5 @@ cd ~/micropython_projects/pico-gfx
 tools/build_fw.sh
 tools/deploy.py
 ```
+
+![here](https://github.com/foldedtoad/pico-gfx/blob/master/docs/images/digital_pocket_watch.jpg)
