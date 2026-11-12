@@ -7,7 +7,7 @@
 #   hw.stop()                   # call from finally: - hard-resets by default
 #
 # Pins: SPI0, SCK GP6, MOSI GP7, RST GP10, DC GP11, CS GP12, BL GP13
-#       KY-040 encoder: CLK GP18, DT GP22, SW GP28 (module powered from 3V3)
+#       KY-040 encoder: CLK GP18, DT GP19, SW GP28 (module powered from 3V3)
 
 import sys
 import time

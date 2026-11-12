@@ -13,6 +13,11 @@ import hw
 
 DEBUG_STATS_S = 10                                 # 0 = no periodic stats
 
+# KY-040 rotary encoder = the watch crown (check with tests/encoder_test.py)
+ENCODER_CLK, ENCODER_DT, ENCODER_SW = 18, 19, 28   # DT must be CLK + 1 (PIO pin pair)
+ENCODER_STEPS = 4                                  # raw steps per click (4 or 2)
+ENCODER_REVERSE = False                            # True if clockwise counts down
+
 
 async def housekeeping():
     """App-wide background task: GC and, optionally, a stats line."""
@@ -43,10 +48,14 @@ def run():
 
     from ui import App
     from screens.watch import WatchScreen
+    from encoder import RotaryEncoder, Button
     import lvgl as lv
 
     app = App()
-    app.add("watch", WatchScreen)
+    app.encoder = RotaryEncoder(ENCODER_CLK, ENCODER_DT,
+                                steps_per_detent=ENCODER_STEPS, reverse=ENCODER_REVERSE)
+    app.crown = Button(ENCODER_SW)
+    app.add("watch", WatchScreen)                  # screens pick up app.encoder / app.crown
     app.start("watch")
 
     lv.refr_now(None)                              # draw the first frame now...

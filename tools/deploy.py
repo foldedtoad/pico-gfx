@@ -13,7 +13,7 @@ Thonny users: click Run > Disconnect in Thonny first (only one program can
 use the serial port), then reconnect Thonny with the Stop/Restart button.
 
 Files copied (same set as tools/deploy.sh):
-    app/hw.py app/ui.py app/app_main.py app/main.py  ->  /
+    app/hw.py app/ui.py app/encoder.py app/app_main.py app/main.py  ->  /
     app/screens/*.py                                ->  /screens/
 """
 
@@ -44,7 +44,7 @@ class DeployError(Exception):
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, "app")
-TOP_FILES = ["hw.py", "ui.py", "app_main.py", "main.py"]
+TOP_FILES = ["hw.py", "ui.py", "encoder.py", "app_main.py", "main.py"]
 PICO_VID = 0x2E8A                     # Raspberry Pi
 CHUNK = 256
 

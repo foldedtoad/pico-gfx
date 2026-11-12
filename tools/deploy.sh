@@ -18,7 +18,7 @@ fi
 
 $MP mkdir :screens >/dev/null 2>&1 || true
 
-$MP cp "$APP/hw.py" "$APP/ui.py" "$APP/app_main.py" "$APP/main.py" : \
+$MP cp "$APP/hw.py" "$APP/ui.py" "$APP/encoder.py" "$APP/app_main.py" "$APP/main.py" : \
   + cp "$APP"/screens/*.py :screens/
 
 echo "Files on board:"
