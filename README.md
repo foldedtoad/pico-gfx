@@ -23,4 +23,5 @@ tools/build_fw.sh
 tools/deploy.py
 ```
 
+<img src="docs/images/digital_pocket_watch.jpg)" title="digital pocket watch">
 ![here](https://github.com/foldedtoad/pico-gfx/blob/master/docs/images/digital_pocket_watch.jpg)
