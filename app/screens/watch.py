@@ -9,10 +9,13 @@
 # Time comes from the Pico's RTC (machine.RTC). Thonny sets it when it
 # connects; with mpremote:  mpremote rtc --set.  Or set it with the crown:
 #
-#   click knob   "pull the crown": seconds hand stops at 0, set mode
-#   turn knob    move the minute hand (fast turning = bigger steps)
-#   click again  "push the crown in": new time stored, watch restarts at :00
-#   hold ~1 s    (in set mode) cancel, keep the old time
+#   click knob     "pull the crown": seconds hand stops at 0, set mode (minutes)
+#   turn knob      minutes: +-1 per click (fast turning = 5 / 15 min steps)
+#                  hours:   +-1 hour per click, minutes unchanged
+#   double-click   switch minutes <-> hours; the seconds hand shows which:
+#                  parked at 0 = minutes, parked at 30 = hours
+#   click again    "push the crown in": new time stored, watch restarts at :00
+#   hold ~1 s      (in set mode) cancel, keep the old time
 
 import time
 import machine
@@ -31,6 +34,7 @@ PIVOTS = {
 }
 
 POLL_MS = 40
+DOUBLE_CLICK_MS = 350     # only active while setting, so entering set mode is instant
 
 
 class WatchScreen(Screen):
@@ -47,6 +51,7 @@ class WatchScreen(Screen):
         self._pivots_set = False
         self.setting = False
         self.set_minutes = 0                             # 0..1439 while setting
+        self.set_hours_mode = False                      # False: minutes, True: hours
 
     # ---- hands ----
     def _rotate(self, name, tenths):
@@ -55,9 +60,11 @@ class WatchScreen(Screen):
             self._angle[name] = tenths
             eezui.set_rotation(name, tenths)
 
-    def _show(self, h, m, s, beat=0.0):
+    def _show(self, h, m, s, beat=0.0, second_tenths=None):
         # angles in 0.1 degree units
-        self._rotate("img_second", int((s + beat) * 60))           # 6 deg / s
+        if second_tenths is None:
+            second_tenths = int((s + beat) * 60)                    # 6 deg / s
+        self._rotate("img_second", second_tenths)
         self._rotate("img_minute", m * 60 + s)                     # 0.1 deg / s
         self._rotate("img_hour", ((h % 12) * 3600 + m * 60 + s) // 12)
 
@@ -76,7 +83,8 @@ class WatchScreen(Screen):
     def update(self):
         if self.setting:
             h, m = divmod(self.set_minutes, 60)
-            self._show(h, m, 0)
+            # seconds hand doubles as the mode indicator: 0 = minutes, 30 = hours
+            self._show(h, m, 0, second_tenths=1800 if self.set_hours_mode else 0)
         else:
             h, m, s, frac = self._now()
             self._show(h, m, s, int(frac * BEATS_PER_SECOND) / BEATS_PER_SECOND)
@@ -86,6 +94,9 @@ class WatchScreen(Screen):
         dt = self.rtc.datetime()
         self.set_minutes = dt[4] * 60 + dt[5]
         self.setting = True
+        self.set_hours_mode = False
+        if self.crown:
+            self.crown.double_ms = DOUBLE_CLICK_MS       # double-click only while setting
         if self.encoder:
             self.encoder.flush()                         # ignore turns made before
         print("watch: set mode (%02d:%02d)" % divmod(self.set_minutes, 60))
@@ -95,13 +106,19 @@ class WatchScreen(Screen):
         h, m = divmod(self.set_minutes, 60)
         self.rtc.datetime((y, mo, d, wd, h, m, 0, 0))
         self._last_s = None                              # restart the beat cleanly
-        self.setting = False
+        self._end_setting()
         print("watch: time set to %02d:%02d:00" % (h, m))
 
     def _cancel(self):
-        self.setting = False
+        self._end_setting()
         self._last_s = None
         print("watch: setting cancelled")
+
+    def _end_setting(self):
+        self.setting = False
+        self.set_hours_mode = False
+        if self.crown:
+            self.crown.double_ms = 0                     # back to instant clicks
 
     @staticmethod
     def _step(detents):
@@ -117,12 +134,16 @@ class WatchScreen(Screen):
                     self._push_crown()
                 else:
                     self._pull_crown()
+            elif ev == "double" and self.setting:
+                self.set_hours_mode = not self.set_hours_mode
+                print("watch: setting %s" % ("hours" if self.set_hours_mode else "minutes"))
             elif ev == "long" and self.setting:
                 self._cancel()
         if self.encoder:
             d = self.encoder.take()
             if d and self.setting:
-                self.set_minutes = (self.set_minutes + d * self._step(d)) % 1440
+                step = 60 if self.set_hours_mode else self._step(d)
+                self.set_minutes = (self.set_minutes + d * step) % 1440
 
     # ---- lifecycle ----
     def enter(self):

@@ -1,8 +1,5 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[dashboard.eez-project]:/userPages/1",
-    "selectedActionObject": "[dashboard.eez-project]:/actions/2",
-    "selectedGlobalVariableObject": "[dashboard.eez-project]:/variables/globalVariables/0",
     "selectedBitmapObject": "[dashboard.eez-project]:/bitmaps/1",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
@@ -128,6 +125,7 @@
                   "type": "tabset",
                   "id": "#ee094178-e39f-44ef-bdcd-c87e27fcea59",
                   "weight": 1,
+                  "selected": 1,
                   "enableClose": false,
                   "children": [
                     {
@@ -199,17 +197,6 @@
               "children": [
                 {
                   "type": "tab",
-                  "id": "#23f38e31-235c-4da3-bb67-6bbfdde7088c",
-                  "name": "Watch",
-                  "component": "editor",
-                  "config": {
-                    "objectPath": "[dashboard.eez-project]:/userPages/1",
-                    "permanent": false
-                  },
-                  "icon": "svg:page"
-                },
-                {
-                  "type": "tab",
                   "id": "#b468aee3-76b2-4e2d-aa61-5db20e902bbe",
                   "name": "Settings",
                   "component": "editor",
@@ -231,8 +218,7 @@
                   },
                   "icon": "svg:page"
                 }
-              ],
-              "active": true
+              ]
             },
             {
               "type": "row",
@@ -252,7 +238,8 @@
                       "enableClose": false,
                       "icon": "svg:properties"
                     }
-                  ]
+                  ],
+                  "active": true
                 },
                 {
                   "type": "tabset",

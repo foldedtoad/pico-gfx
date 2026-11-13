@@ -34,3 +34,23 @@ cd ~/micropython_projects/pico-gfx
 tools/build_fw.sh
 tools/deploy.py
 ```
+
+## How to use the crown to set the time
+```
+Action	            Result
+---------           ------------
+Click	            Enter set mode (minutes). The seconds hand parks at 0.
+
+Turn	            ±1 minute per click; fast spins jump 5 or 15 minutes.
+
+Double-click	    Switch to hours. The seconds hand moves to 30, pointing down.
+
+Turn (hour mode)    ±1 hour per click; the minutes stay as they are.
+
+Double-click again	Back to minutes, with the seconds hand at 0.
+
+Single click	    Save the time; the watch restarts from :00.
+
+Hold about 1 s      Cancel and keep the old time.
+
+```

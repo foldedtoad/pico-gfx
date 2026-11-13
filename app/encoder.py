@@ -4,7 +4,7 @@
 #   btn = Button(28)                          # push switch, polled
 #
 #   enc.take()   -> clicks turned since the last call (+ clockwise, - counter)
-#   btn.poll()   -> None, "click" (on release) or "long" (while held >= long_ms)
+#   btn.poll()   -> None, "click", "double" or "long" (see Button)
 #
 # Wiring: module + to 3V3 (NOT 5 V), GND to GND. DT must be on the GPIO right
 # after CLK (PIO reads them as a pin pair). CLK/DT have 10k pull-ups on the
@@ -147,21 +147,38 @@ class RotaryEncoder:
 
 
 class Button:
-    def __init__(self, pin, long_ms=900):
+    """Debounced push switch.
+
+    poll() returns None, "click", "double" or "long".
+    double_ms = 0 (default): every release is an immediate "click".
+    double_ms > 0: a release waits up to double_ms for a second click; two
+    clicks give one "double", a lone click is reported once the window ends.
+    """
+
+    def __init__(self, pin, long_ms=900, double_ms=0):
         self._p = Pin(pin, Pin.IN, Pin.PULL_UP)
         self._long_ms = long_ms
+        self.double_ms = double_ms
         self._raw = self._stable = self._p.value()
         self._down_at = None
         self._long_sent = False
+        self._pending_at = None               # time of a click awaiting a possible 2nd
 
     def is_down(self):
         return self._stable == 0
 
     def poll(self):
         """Call every 10-50 ms. A level must be seen on two consecutive polls
-        before it counts (debounce). Returns None, 'click' or 'long'."""
+        before it counts (debounce)."""
         raw = self._p.value()
         now = time.ticks_ms()
+
+        # a lone click whose double-click window has run out
+        if (self._pending_at is not None and self._stable == 1
+                and time.ticks_diff(now, self._pending_at) > self.double_ms):
+            self._pending_at = None
+            return "click"
+
         if raw != self._raw:                  # changed since last poll: wait one more
             self._raw = raw
             return None
@@ -173,9 +190,19 @@ class Button:
                 return None
             was_long = self._long_sent        # released
             self._down_at = None
-            return None if was_long else "click"
+            if was_long:
+                self._pending_at = None
+                return None
+            if self.double_ms <= 0:
+                return "click"
+            if self._pending_at is not None:  # second click inside the window
+                self._pending_at = None
+                return "double"
+            self._pending_at = now
+            return None
         if (raw == 0 and self._down_at is not None and not self._long_sent
                 and time.ticks_diff(now, self._down_at) >= self._long_ms):
             self._long_sent = True
+            self._pending_at = None
             return "long"
         return None
