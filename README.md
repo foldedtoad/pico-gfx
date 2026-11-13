@@ -2,7 +2,12 @@
 
 
 ## Overview
-
+This project will show how to integrate EEZ-Studio (a host-side graphic development tool) 
+for creating GUIs targeting LVGL+Micropython embedded platform, such a the Pico2.  
+ 
+As an example application, as "digital pocket watch", modeled after a real, railroad-grade pocket watch is provided.  
+A rotory-encoder is use to emulate the crown winder.
+  
 <img src="docs/images/digital_pocket_watch.jpg" title="digital pocket watch">
 
 ## Hardware Assumptions 
