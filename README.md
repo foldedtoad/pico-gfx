@@ -9,6 +9,8 @@ As an example application, as "digital pocket watch", modeled after a real, rail
 A rotory-encoder is use to emulate the crown winder.
   
 <img src="docs/images/digital_pocket_watch.jpg" title="digital pocket watch">
+ 
+<img src="docs/images/digital_pocket_watch_details.jpg" title="digital pocket watch details">
 
 ## Hardware Assumptions 
 * Raspberry Pie RP2350 (Pico2)
