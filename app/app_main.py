@@ -44,6 +44,10 @@ def _log_crash(exc):
 
 
 def run():
+    from timekeeper import Timekeeper
+    tk = Timekeeper()                              # DS3231 backup clock, if fitted
+    tk.sync_at_boot()                              # correct time before the first frame
+
     hw.start(backlight=0)                          # dark until the dial is drawn
 
     from ui import App
@@ -55,6 +59,7 @@ def run():
     app.encoder = RotaryEncoder(ENCODER_CLK, ENCODER_DT,
                                 steps_per_detent=ENCODER_STEPS, reverse=ENCODER_REVERSE)
     app.crown = Button(ENCODER_SW)
+    app.timekeeper = tk
     app.add("watch", WatchScreen)                  # screens pick up app.encoder / app.crown
     app.start("watch")
 
@@ -65,7 +70,7 @@ def run():
     print("app running - free heap:", gc.mem_free())
 
     try:
-        asyncio.run(app.run_forever(housekeeping()))
+        asyncio.run(app.run_forever(housekeeping(), tk.resync_forever()))
     except KeyboardInterrupt:
         print("\napp stopped (Ctrl-C)")
     except Exception as e:

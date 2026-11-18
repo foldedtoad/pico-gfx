@@ -44,7 +44,8 @@ class DeployError(Exception):
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP = os.path.join(ROOT, "app")
-TOP_FILES = ["hw.py", "ui.py", "encoder.py", "app_main.py", "main.py"]
+TOP_FILES = ["hw.py", "ui.py", "encoder.py", "ds3231.py", "timekeeper.py",
+             "app_main.py", "main.py"]
 PICO_VID = 0x2E8A                     # Raspberry Pi
 CHUNK = 256
 
